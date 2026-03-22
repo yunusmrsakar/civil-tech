@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum RequestStatus {
+  NEW
+  REVIEWED
+  CONTACTED
+  CLOSED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id       String  @id @default(cuid())
+  email    String  @unique
+  password String
+  name     String
+  role     Role    @default(ADMIN)
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  products    Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  price       Float
+  images      String[]
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  stock       Int      @default(0)
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Portfolio {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String
+  images      String[]
+  client      String
+  completedAt DateTime
+  createdAt   DateTime @default(now())
+}
+
+model Testimonial {
+  id         String   @id @default(cuid())
+  clientName String
+  company    String
+  content    String
+  rating     Int      @default(5)
+  avatar     String?
+  featured   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model Booking {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  phone     String
+  service   String
+  date      DateTime
+  timeSlot  String
+  message   String?
+  status    BookingStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+}
+
+model Request {
+  id          String        @id @default(cuid())
+  name        String
+  email       String
+  phone       String
+  company     String?
+  projectType String
+  budget      String?
+  timeline    String?
+  description String
+  attachments String[]
+  status      RequestStatus @default(NEW)
+  createdAt   DateTime      @default(now())
+}
+
+model Order {
+  id               String      @id @default(cuid())
+  email            String
+  items            Json
+  total            Float
+  stripeSessionId  String?     @unique
+  status           OrderStatus @default(PENDING)
+  createdAt        DateTime    @default(now())
+}
