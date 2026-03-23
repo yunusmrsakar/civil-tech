@@ -156,9 +156,6 @@ export default async function ProductsPage({
           </svg>
           <h3 className="mt-4 text-lg font-semibold text-slate-900">No products found</h3>
           <p className="mt-1 text-sm text-slate-600">
-            Host: {process.env.DATABASE_URL?.split('@')[1]?.split(':')[0] || 'Unknown'}
-          </p>
-          <p className="mt-1 text-sm text-slate-600">
             Try adjusting your search or filter criteria.
           </p>
           <Link

@@ -5,10 +5,14 @@ import pg from 'pg'
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
 function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL?.trim().replace('?sslmode=require', '');
+  const connectionString = process.env.DATABASE_URL?.trim()
+    .replace('?sslmode=require', '')
+    .replace('?channel_binding=require&sslmode=require', '')
+    .replace('&sslmode=require', '')
+    .replace('&channel_binding=require', '');
   const pool = new pg.Pool({
     connectionString,
-    ssl: { rejectUnauthorized: false },
+    ssl: true,
   })
   const adapter = new PrismaPg(pool as any)
   return new PrismaClient({ adapter })
