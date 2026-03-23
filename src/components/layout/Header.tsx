@@ -9,7 +9,7 @@ const navLinks = [
   { href: "/products", label: "Products" },
   { href: "/portfolio", label: "Portfolio" },
   { href: "/booking", label: "Booking" },
-  { href: "/request-quote", label: "Request Quote" },
+  { href: "/request", label: "Request Quote" },
 ];
 
 export default function Header() {
