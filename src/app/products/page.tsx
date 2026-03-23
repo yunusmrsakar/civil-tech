@@ -30,6 +30,8 @@ export default async function ProductsPage({
   let categories: CategoryItem[] = [];
   let products: ProductItem[] = [];
 
+  let dbError = null;
+
   try {
     categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
 
@@ -48,8 +50,8 @@ export default async function ProductsPage({
       include: { category: true },
       orderBy: { createdAt: "desc" },
     });
-  } catch {
-    // DB not available
+  } catch (error: any) {
+    dbError = error.message || String(error);
   }
 
   return (
@@ -117,7 +119,12 @@ export default async function ProductsPage({
       </div>
 
       {/* Products Grid */}
-      {products.length > 0 ? (
+      {dbError ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-red-300 bg-red-50 p-6 text-red-900">
+          <h3 className="text-lg font-semibold">Database Connection Error</h3>
+          <pre className="mt-2 whitespace-pre-wrap text-sm">{dbError}</pre>
+        </div>
+      ) : products.length > 0 ? (
         <ProductGrid>
           {products.map((product) => (
             <Link key={product.id} href={`/products/${product.slug}`}>
@@ -148,6 +155,9 @@ export default async function ProductsPage({
             />
           </svg>
           <h3 className="mt-4 text-lg font-semibold text-slate-900">No products found</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            Host: {process.env.DATABASE_URL?.split('@')[1]?.split(':')[0] || 'Unknown'}
+          </p>
           <p className="mt-1 text-sm text-slate-600">
             Try adjusting your search or filter criteria.
           </p>

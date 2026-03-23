@@ -1,10 +1,11 @@
+import 'dotenv/config'
 import { PrismaClient } from '../src/generated/prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import pg from 'pg'
 import bcrypt from 'bcryptjs'
 
 const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL!,
+  connectionString: process.env.DATABASE_URL?.replace(':5432', ':6543'),
   ssl: { rejectUnauthorized: false },
 })
 const adapter = new PrismaPg(pool as any)

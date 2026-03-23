@@ -5,8 +5,9 @@ import pg from 'pg'
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
 function createPrismaClient() {
+  const connectionString = process.env.DATABASE_URL?.trim().replace('?sslmode=require', '');
   const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL!,
+    connectionString,
     ssl: { rejectUnauthorized: false },
   })
   const adapter = new PrismaPg(pool as any)
