@@ -17,14 +17,14 @@ async function main() {
 
   // ===== KULLANICILAR =====
   const users = [
-    { name: 'Kubi', username: 'kubi', password: 'kubi2026' },
-    { name: 'Furkan', username: 'furkan', password: 'furkan2026' },
-    { name: 'Yunus', username: 'yunus', password: 'yunus2026' },
-    { name: 'Karabudak', username: 'karabudak', password: 'karabudak2026' },
-    { name: 'Güneş', username: 'gunes', password: 'gunes2026' },
-    { name: 'Atahan', username: 'atahan', password: 'atahan2026' },
-    { name: 'Doğancan', username: 'dogancan', password: 'dogancan2026' },
-    { name: 'Serhat', username: 'serhat', password: 'serhat2026' },
+    { name: 'Kubi', username: 'kubi', password: 'I0tZAOBGaB' },
+    { name: 'Furkan', username: 'furkan', password: 'Yq3bx4j20I' },
+    { name: 'Yunus', username: 'yunus', password: 'LMJnaYTT4o' },
+    { name: 'Karabudak', username: 'karabudak', password: 'di0g96dEZn' },
+    { name: 'Güneş', username: 'gunes', password: 'GmM9gSwklC' },
+    { name: 'Atahan', username: 'atahan', password: '0pc1BSWQrB' },
+    { name: 'Doğancan', username: 'dogancan', password: '4rxhiX9HZB' },
+    { name: 'Serhat', username: 'serhat', password: 'rMeLxkYaCC' },
   ];
 
   console.log('\n🔐 Kullanıcılar oluşturuluyor...\n');
