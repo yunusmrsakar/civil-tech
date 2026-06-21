@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma, pool } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
 const USERS = [
@@ -63,19 +63,6 @@ const MATCHES = [
 ];
 
 async function createTables() {
-  const pool = (prisma as any)._engineConfig?.adapter?.pool;
-  if (!pool) {
-    const pg = await import('pg');
-    const connectionString = process.env.DATABASE_URL?.trim()
-      .replace('?sslmode=require', '')
-      .replace('?channel_binding=require&sslmode=require', '')
-      .replace('&sslmode=require', '')
-      .replace('&channel_binding=require', '');
-    const tempPool = new pg.default.Pool({ connectionString, ssl: true });
-    await runCreateSQL(tempPool);
-    await tempPool.end();
-    return;
-  }
   await runCreateSQL(pool);
 }
 
@@ -167,6 +154,6 @@ export async function GET() {
       message: `Setup tamamlandı! ${users} kullanıcı, ${matches} maç.`,
     });
   } catch (error: any) {
-    return Response.json({ success: false, error: error.message }, { status: 500 });
+    return Response.json({ success: false, error: error.message, stack: error.stack }, { status: 500 });
   }
 }
