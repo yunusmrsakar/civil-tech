@@ -75,6 +75,18 @@ async function runCreateSQL(pool: any) {
   `);
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS "User" (
+      "id" TEXT NOT NULL DEFAULT gen_random_uuid()::text,
+      "email" TEXT NOT NULL,
+      "password" TEXT NOT NULL,
+      "name" TEXT NOT NULL,
+      "role" "Role" NOT NULL DEFAULT 'ADMIN',
+      CONSTRAINT "User_pkey" PRIMARY KEY ("id"),
+      CONSTRAINT "User_email_key" UNIQUE ("email")
+    );
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS "WCMatch" (
       "id" TEXT NOT NULL DEFAULT gen_random_uuid()::text,
       "homeTeam" TEXT NOT NULL,
