@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import { PARTICIPANTS, TEAM_FLAGS } from '@/lib/worldcup';
 
 interface Prediction {
@@ -34,46 +36,55 @@ interface LeaderboardEntry {
   points: number;
 }
 
+interface CurrentUser {
+  id: string;
+  name: string;
+  username: string;
+}
+
 export default function WorldCupClient() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [selectedUser, setSelectedUser] = useState<string>('');
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const [predictions, setPredictions] = useState<Record<string, { home: string; away: string }>>({});
   const [submitting, setSubmitting] = useState<Record<string, boolean>>({});
-  const [showUserSelect, setShowUserSelect] = useState(false);
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   const fetchData = useCallback(async () => {
     try {
-      const [matchRes, lbRes] = await Promise.all([
+      const [matchRes, lbRes, meRes] = await Promise.all([
         fetch('/api/worldcup/matches'),
         fetch('/api/worldcup/leaderboard'),
+        fetch('/api/worldcup/me'),
       ]);
+
+      if (meRes.status === 401) {
+        router.push('/worldcup/login');
+        return;
+      }
+
       const matchData = await matchRes.json();
       const lbData = await lbRes.json();
+      const meData = await meRes.json();
+
       setMatches(matchData);
       setLeaderboard(lbData);
+      setCurrentUser(meData.user);
     } catch {
-      // silently fail
+      router.push('/worldcup/login');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('wc2026_user');
-    if (saved) setSelectedUser(saved);
-    else setShowUserSelect(true);
     fetchData();
   }, [fetchData]);
 
-  const selectUser = (name: string) => {
-    setSelectedUser(name);
-    localStorage.setItem('wc2026_user', name);
-    setShowUserSelect(false);
-  };
+  const selectedUser = currentUser?.name || '';
 
   const now = new Date();
   const upcomingMatches = matches.filter((m) => !m.isFinished && new Date(m.matchDate) > now);
@@ -142,6 +153,11 @@ export default function WorldCupClient() {
     return match.predictions.length;
   };
 
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push('/worldcup/login');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -155,33 +171,6 @@ export default function WorldCupClient() {
 
   return (
     <div className="max-w-lg mx-auto pb-8">
-      {/* User Select Modal */}
-      {showUserSelect && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
-            <h2 className="text-xl font-bold text-center mb-1">⚽ Hoş Geldin!</h2>
-            <p className="text-gray-500 text-center text-sm mb-4">Kimsin sen?</p>
-            <div className="grid grid-cols-2 gap-2">
-              {PARTICIPANTS.map((p) => (
-                <button
-                  key={p.name}
-                  onClick={() => selectUser(p.name)}
-                  className="flex items-center gap-2 p-3 rounded-xl border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all"
-                >
-                  <span
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                    style={{ backgroundColor: p.color }}
-                  >
-                    {p.initial}
-                  </span>
-                  <span className="font-medium text-sm">{p.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <div className="bg-gradient-to-r from-green-700 to-green-600 text-white p-4 pb-5 rounded-b-3xl shadow-lg">
         <div className="flex items-center justify-between mb-2">
@@ -189,16 +178,22 @@ export default function WorldCupClient() {
             <span className="text-2xl">🏆</span>
             <h1 className="text-lg font-bold">DÜNYA KUPASI 2026</h1>
           </div>
-          <button
-            onClick={() => setShowUserSelect(true)}
-            className="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-          >
-            {selectedUser || 'Seç'}
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="bg-white/20 px-3 py-1.5 rounded-full text-xs font-medium">
+              {selectedUser}
+            </span>
+            <button
+              onClick={handleLogout}
+              className="bg-white/10 hover:bg-white/20 p-1.5 rounded-full transition-all text-xs"
+              title="Çıkış Yap"
+            >
+              ✕
+            </button>
+          </div>
         </div>
         <div className="flex flex-wrap gap-1.5 text-xs opacity-90">
           {PARTICIPANTS.map((p, i) => (
-            <span key={p.name}>
+            <span key={p.name} className={p.name === selectedUser ? 'font-bold' : ''}>
               {p.name}{i < PARTICIPANTS.length - 1 ? ' · ' : ''}
             </span>
           ))}
@@ -442,8 +437,6 @@ function MatchCard({
             <div className="text-2xl font-bold">
               {match.homeScore} - {match.awayScore}
             </div>
-          ) : matchStarted ? (
-            <div className="text-lg font-semibold text-gray-400">vs</div>
           ) : (
             <div className="text-lg font-semibold text-gray-300">vs</div>
           )}
@@ -462,7 +455,7 @@ function MatchCard({
       {/* Prediction Input (upcoming matches only) */}
       {!match.isFinished && !matchStarted && selectedUser && (
         <div className="px-4 pb-3 border-t border-gray-100 pt-3">
-          {myPred ? (
+          {myPred && !predictions[match.id] ? (
             <div className="flex items-center justify-center gap-3 text-sm">
               <span className="text-gray-500">Tahminin:</span>
               <span className="bg-green-100 text-green-800 font-bold px-3 py-1 rounded-lg">
@@ -480,9 +473,7 @@ function MatchCard({
                 Değiştir
               </button>
             </div>
-          ) : (
-            <></>
-          )}
+          ) : null}
 
           {(predictions[match.id] || !myPred) && (
             <div className="flex items-center justify-center gap-2 mt-2">
@@ -548,7 +539,7 @@ function MatchCard({
           {isExpanded && (
             <div className="px-4 pb-3 space-y-1.5">
               {PARTICIPANTS.map((p) => {
-                const pred = match.predictions.find((pr) => pr.participant === p.name);
+                const pred = match.predictions.find((pr: Prediction) => pr.participant === p.name);
                 const participant = getParticipant(p.name);
                 return (
                   <div

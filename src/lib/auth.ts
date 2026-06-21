@@ -8,8 +8,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Credentials({
       name: 'credentials',
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
+        email: { label: 'Kullanıcı Adı', type: 'text' },
+        password: { label: 'Şifre', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -58,7 +58,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   pages: {
-    signIn: '/admin/login',
+    signIn: '/worldcup/login',
   },
   session: {
     strategy: 'jwt',

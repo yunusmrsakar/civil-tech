@@ -10,9 +10,10 @@ function createPrismaClient() {
     .replace('?channel_binding=require&sslmode=require', '')
     .replace('&sslmode=require', '')
     .replace('&channel_binding=require', '');
+  const isLocal = connectionString?.includes('localhost') || connectionString?.includes('127.0.0.1');
   const pool = new pg.Pool({
     connectionString,
-    ssl: true,
+    ssl: isLocal ? false : true,
   })
   const adapter = new PrismaPg(pool as any)
   return new PrismaClient({ adapter })
