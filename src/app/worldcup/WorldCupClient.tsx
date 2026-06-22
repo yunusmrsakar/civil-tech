@@ -27,6 +27,7 @@ interface Match {
   stadium: string;
   isFinished: boolean;
   predictions: Prediction[];
+  totalPredictions: number;
 }
 
 interface LeaderboardEntry {
@@ -150,7 +151,7 @@ export default function WorldCupClient() {
   };
 
   const predictionCount = (match: Match) => {
-    return match.predictions.length;
+    return match.totalPredictions ?? match.predictions.length;
   };
 
   const handleLogout = async () => {

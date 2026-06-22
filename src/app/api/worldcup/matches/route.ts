@@ -11,15 +11,15 @@ export async function GET() {
     orderBy: { matchDate: 'asc' },
   });
 
-  const now = new Date();
   const filtered = matches.map((match) => {
+    const totalPredictions = match.predictions.length;
     if (match.isFinished) {
-      return match;
+      return { ...match, totalPredictions };
     }
-    // For upcoming/live matches, only show the current user's prediction
     return {
       ...match,
       predictions: match.predictions.filter((p) => p.participant === currentUserName),
+      totalPredictions,
     };
   });
 
