@@ -26,9 +26,13 @@ export async function GET() {
     if (match.isFinished || matchStarted) {
       return { ...match, totalPredictions };
     }
+    const myPrediction = match.predictions.filter((p) => p.participant === currentUserName);
+    const others = match.predictions
+      .filter((p) => p.participant !== currentUserName)
+      .map((p) => ({ ...p, homeScore: -1, awayScore: -1, points: 0 }));
     return {
       ...match,
-      predictions: match.predictions.filter((p) => p.participant === currentUserName),
+      predictions: [...myPrediction, ...others],
       totalPredictions,
     };
   });
