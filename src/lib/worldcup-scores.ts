@@ -70,6 +70,26 @@ interface ESPNEvent {
   }>;
 }
 
+export async function recalculateAllPoints() {
+  const finished = await prisma.wCMatch.findMany({
+    where: { isFinished: true },
+    include: { predictions: true },
+  });
+
+  for (const match of finished) {
+    if (match.homeScore === null || match.awayScore === null) continue;
+    for (const pred of match.predictions) {
+      const { total } = calculatePoints(pred.homeScore, pred.awayScore, match.homeScore, match.awayScore);
+      if (pred.points !== total) {
+        await prisma.wCPrediction.update({
+          where: { id: pred.id },
+          data: { points: total },
+        });
+      }
+    }
+  }
+}
+
 export async function autoFinishMatches() {
   const now = new Date();
   const cutoff = new Date(now.getTime() - 120 * 60 * 1000);
