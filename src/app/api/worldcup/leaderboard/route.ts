@@ -8,7 +8,7 @@ export async function GET() {
 
   const scores: Record<string, number> = {};
   for (const p of PARTICIPANTS) {
-    scores[p.name] = 0;
+    scores[p.name] = p.basePoints;
   }
   for (const pred of predictions) {
     scores[pred.participant] = (scores[pred.participant] || 0) + pred.points;

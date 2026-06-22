@@ -1,12 +1,12 @@
 export const PARTICIPANTS = [
-  { name: 'Kubi', initial: 'K', color: '#4CAF50' },
-  { name: 'Furkan', initial: 'F', color: '#2196F3' },
-  { name: 'Yunus', initial: 'Y', color: '#FF9800' },
-  { name: 'Karabudak', initial: 'K', color: '#9C27B0' },
-  { name: 'Güneş', initial: 'G', color: '#E91E63' },
-  { name: 'Atahan', initial: 'A', color: '#00BCD4' },
-  { name: 'Doğancan', initial: 'D', color: '#FF5722' },
-  { name: 'Serhat', initial: 'S', color: '#607D8B' },
+  { name: 'Kubi', initial: 'K', color: '#4CAF50', basePoints: 94 },
+  { name: 'Furkan', initial: 'F', color: '#2196F3', basePoints: 100 },
+  { name: 'Yunus', initial: 'Y', color: '#FF9800', basePoints: 72 },
+  { name: 'Karabudak', initial: 'K', color: '#9C27B0', basePoints: 57 },
+  { name: 'Güneş', initial: 'G', color: '#E91E63', basePoints: 112 },
+  { name: 'Atahan', initial: 'A', color: '#00BCD4', basePoints: 108 },
+  { name: 'Doğancan', initial: 'D', color: '#FF5722', basePoints: 97 },
+  { name: 'Serhat', initial: 'S', color: '#607D8B', basePoints: 118 },
 ] as const;
 
 export type ParticipantName = (typeof PARTICIPANTS)[number]['name'];
