@@ -49,6 +49,7 @@ export default function WorldCupClient() {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const [predictions, setPredictions] = useState<Record<string, { home: string; away: string }>>({});
+  const [finalScores, setFinalScores] = useState<Record<string, { home: string; away: string }>>({});
   const [submitting, setSubmitting] = useState<Record<string, boolean>>({});
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -130,6 +131,34 @@ export default function WorldCupClient() {
         await fetchData();
         setPredictions((p) => {
           const next = { ...p };
+          delete next[matchId];
+          return next;
+        });
+      }
+    } finally {
+      setSubmitting((s) => ({ ...s, [matchId]: false }));
+    }
+  };
+
+  const finishMatch = async (matchId: string) => {
+    const score = finalScores[matchId];
+    if (!score || score.home === '' || score.away === '') return;
+
+    setSubmitting((s) => ({ ...s, [matchId]: true }));
+    try {
+      const res = await fetch('/api/worldcup/matches/finish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          matchId,
+          homeScore: Number(score.home),
+          awayScore: Number(score.away),
+        }),
+      });
+      if (res.ok) {
+        await fetchData();
+        setFinalScores((s) => {
+          const next = { ...s };
           delete next[matchId];
           return next;
         });
@@ -306,6 +335,9 @@ export default function WorldCupClient() {
                     predictionCount={predictionCount}
                     expandedMatch={expandedMatch}
                     setExpandedMatch={setExpandedMatch}
+                    finalScores={finalScores}
+                    setFinalScores={setFinalScores}
+                    finishMatch={finishMatch}
                     isLive
                   />
                 ))}
@@ -388,6 +420,9 @@ function MatchCard({
   predictionCount,
   expandedMatch,
   setExpandedMatch,
+  finalScores,
+  setFinalScores,
+  finishMatch,
   isLive,
   showAllPredictions,
 }: {
@@ -404,6 +439,9 @@ function MatchCard({
   predictionCount: (match: Match) => number;
   expandedMatch: string | null;
   setExpandedMatch: (id: string | null) => void;
+  finalScores?: Record<string, { home: string; away: string }>;
+  setFinalScores?: React.Dispatch<React.SetStateAction<Record<string, { home: string; away: string }>>>;
+  finishMatch?: (matchId: string) => Promise<void>;
   isLive?: boolean;
   showAllPredictions?: boolean;
 }) {
@@ -527,8 +565,8 @@ function MatchCard({
         </div>
       )}
 
-      {/* All Predictions (past matches) */}
-      {showAllPredictions && match.isFinished && (
+      {/* All Predictions (finished or started matches) */}
+      {(showAllPredictions || matchStarted) && (
         <div className="border-t border-gray-100">
           <button
             onClick={() => setExpandedMatch(isExpanded ? null : match.id)}
@@ -563,17 +601,19 @@ function MatchCard({
                         <span className="font-semibold">
                           {pred.homeScore} - {pred.awayScore}
                         </span>
-                        <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                            pred.points >= 10
-                              ? 'bg-yellow-100 text-yellow-700'
-                              : pred.points > 0
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-gray-100 text-gray-500'
-                          }`}
-                        >
-                          +{pred.points}
-                        </span>
+                        {match.isFinished && (
+                          <span
+                            className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                              pred.points >= 10
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : pred.points > 0
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-gray-100 text-gray-500'
+                            }`}
+                          >
+                            +{pred.points}
+                          </span>
+                        )}
                       </div>
                     ) : (
                       <span className="text-xs text-gray-400">Tahmin yok</span>
@@ -586,17 +626,51 @@ function MatchCard({
         </div>
       )}
 
-      {/* Show own prediction for live/started matches */}
-      {!match.isFinished && matchStarted && myPred && (
-        <div className="px-4 pb-3 border-t border-gray-100 pt-2">
-          <div className="flex items-center justify-center gap-3 text-sm">
-            <span className="text-gray-500">Tahminin:</span>
-            <span className="bg-green-100 text-green-800 font-bold px-3 py-1 rounded-lg">
-              {myPred.homeScore} - {myPred.awayScore}
-            </span>
-          </div>
-          <div className="text-center mt-1 text-xs text-gray-400">
-            {predictionCount(match)}/8 kişi tahmin yaptı
+      {/* Finish Match (admin - live matches only) */}
+      {isLive && finishMatch && setFinalScores && finalScores && (
+        <div className="px-4 pb-3 border-t border-gray-100 pt-3">
+          <div className="text-xs font-semibold text-orange-600 mb-2 text-center">Maçı Bitir (Skor Gir)</div>
+          <div className="flex items-center justify-center gap-2">
+            <input
+              type="number"
+              min="0"
+              max="20"
+              placeholder="0"
+              value={finalScores[match.id]?.home ?? ''}
+              onChange={(e) =>
+                setFinalScores((s) => ({
+                  ...s,
+                  [match.id]: { ...s[match.id], home: e.target.value, away: s[match.id]?.away ?? '' },
+                }))
+              }
+              className="w-14 h-10 text-center text-lg font-bold border-2 border-orange-200 rounded-lg focus:border-orange-500 focus:outline-none"
+            />
+            <span className="text-gray-400 font-bold">-</span>
+            <input
+              type="number"
+              min="0"
+              max="20"
+              placeholder="0"
+              value={finalScores[match.id]?.away ?? ''}
+              onChange={(e) =>
+                setFinalScores((s) => ({
+                  ...s,
+                  [match.id]: { home: s[match.id]?.home ?? '', away: e.target.value },
+                }))
+              }
+              className="w-14 h-10 text-center text-lg font-bold border-2 border-orange-200 rounded-lg focus:border-orange-500 focus:outline-none"
+            />
+            <button
+              onClick={() => finishMatch(match.id)}
+              disabled={
+                submitting[match.id] ||
+                !finalScores[match.id]?.home ||
+                !finalScores[match.id]?.away
+              }
+              className="ml-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+            >
+              {submitting[match.id] ? '...' : 'Bitir'}
+            </button>
           </div>
         </div>
       )}
