@@ -49,7 +49,6 @@ export default function WorldCupClient() {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const [predictions, setPredictions] = useState<Record<string, { home: string; away: string }>>({});
-  const [finalScores, setFinalScores] = useState<Record<string, { home: string; away: string }>>({});
   const [submitting, setSubmitting] = useState<Record<string, boolean>>({});
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -89,9 +88,10 @@ export default function WorldCupClient() {
   const selectedUser = currentUser?.name || '';
 
   const now = new Date();
+  const matchEnded = (m: Match) => new Date(m.matchDate).getTime() + 120 * 60 * 1000 < now.getTime();
   const upcomingMatches = matches.filter((m) => !m.isFinished && new Date(m.matchDate) > now);
-  const liveMatches = matches.filter((m) => !m.isFinished && new Date(m.matchDate) <= now);
-  const pastMatches = matches.filter((m) => m.isFinished);
+  const liveMatches = matches.filter((m) => !m.isFinished && new Date(m.matchDate) <= now && !matchEnded(m));
+  const pastMatches = matches.filter((m) => m.isFinished || matchEnded(m));
 
   upcomingMatches.sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
   pastMatches.sort((a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime());
@@ -131,34 +131,6 @@ export default function WorldCupClient() {
         await fetchData();
         setPredictions((p) => {
           const next = { ...p };
-          delete next[matchId];
-          return next;
-        });
-      }
-    } finally {
-      setSubmitting((s) => ({ ...s, [matchId]: false }));
-    }
-  };
-
-  const finishMatch = async (matchId: string) => {
-    const score = finalScores[matchId];
-    if (!score || score.home === '' || score.away === '') return;
-
-    setSubmitting((s) => ({ ...s, [matchId]: true }));
-    try {
-      const res = await fetch('/api/worldcup/matches/finish', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          matchId,
-          homeScore: Number(score.home),
-          awayScore: Number(score.away),
-        }),
-      });
-      if (res.ok) {
-        await fetchData();
-        setFinalScores((s) => {
-          const next = { ...s };
           delete next[matchId];
           return next;
         });
@@ -335,9 +307,6 @@ export default function WorldCupClient() {
                     predictionCount={predictionCount}
                     expandedMatch={expandedMatch}
                     setExpandedMatch={setExpandedMatch}
-                    finalScores={finalScores}
-                    setFinalScores={setFinalScores}
-                    finishMatch={finishMatch}
                     isLive
                   />
                 ))}
@@ -420,9 +389,6 @@ function MatchCard({
   predictionCount,
   expandedMatch,
   setExpandedMatch,
-  finalScores,
-  setFinalScores,
-  finishMatch,
   isLive,
   showAllPredictions,
 }: {
@@ -439,9 +405,6 @@ function MatchCard({
   predictionCount: (match: Match) => number;
   expandedMatch: string | null;
   setExpandedMatch: (id: string | null) => void;
-  finalScores?: Record<string, { home: string; away: string }>;
-  setFinalScores?: React.Dispatch<React.SetStateAction<Record<string, { home: string; away: string }>>>;
-  finishMatch?: (matchId: string) => Promise<void>;
   isLive?: boolean;
   showAllPredictions?: boolean;
 }) {
@@ -472,10 +435,12 @@ function MatchCard({
         </div>
 
         <div className="px-4 text-center min-w-[80px]">
-          {match.isFinished ? (
+          {match.homeScore !== null && match.awayScore !== null ? (
             <div className="text-2xl font-bold">
               {match.homeScore} - {match.awayScore}
             </div>
+          ) : matchStarted ? (
+            <div className="text-xs text-gray-400">Skor bekleniyor</div>
           ) : (
             <div className="text-lg font-semibold text-gray-300">vs</div>
           )}
@@ -626,54 +591,6 @@ function MatchCard({
         </div>
       )}
 
-      {/* Finish Match (admin - live matches only) */}
-      {isLive && finishMatch && setFinalScores && finalScores && (
-        <div className="px-4 pb-3 border-t border-gray-100 pt-3">
-          <div className="text-xs font-semibold text-orange-600 mb-2 text-center">Maçı Bitir (Skor Gir)</div>
-          <div className="flex items-center justify-center gap-2">
-            <input
-              type="number"
-              min="0"
-              max="20"
-              placeholder="0"
-              value={finalScores[match.id]?.home ?? ''}
-              onChange={(e) =>
-                setFinalScores((s) => ({
-                  ...s,
-                  [match.id]: { ...s[match.id], home: e.target.value, away: s[match.id]?.away ?? '' },
-                }))
-              }
-              className="w-14 h-10 text-center text-lg font-bold border-2 border-orange-200 rounded-lg focus:border-orange-500 focus:outline-none"
-            />
-            <span className="text-gray-400 font-bold">-</span>
-            <input
-              type="number"
-              min="0"
-              max="20"
-              placeholder="0"
-              value={finalScores[match.id]?.away ?? ''}
-              onChange={(e) =>
-                setFinalScores((s) => ({
-                  ...s,
-                  [match.id]: { home: s[match.id]?.home ?? '', away: e.target.value },
-                }))
-              }
-              className="w-14 h-10 text-center text-lg font-bold border-2 border-orange-200 rounded-lg focus:border-orange-500 focus:outline-none"
-            />
-            <button
-              onClick={() => finishMatch(match.id)}
-              disabled={
-                submitting[match.id] ||
-                !finalScores[match.id]?.home ||
-                !finalScores[match.id]?.away
-              }
-              className="ml-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all"
-            >
-              {submitting[match.id] ? '...' : 'Bitir'}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
