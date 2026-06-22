@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
-import { autoFinishMatches } from '@/lib/worldcup-scores';
+import { autoFinishMatches, recalculateAllPoints } from '@/lib/worldcup-scores';
 import { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -9,7 +9,10 @@ export async function GET() {
   const session = await auth();
   const currentUserName = session?.user?.name;
 
-  await autoFinishMatches().catch(() => {});
+  await Promise.all([
+    autoFinishMatches().catch(() => {}),
+    recalculateAllPoints().catch(() => {}),
+  ]);
 
   const matches = await prisma.wCMatch.findMany({
     include: { predictions: true },
