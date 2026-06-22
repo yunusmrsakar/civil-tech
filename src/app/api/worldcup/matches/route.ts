@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { NextRequest } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const session = await auth();
   const currentUserName = session?.user?.name;
@@ -13,13 +15,15 @@ export async function GET() {
 
   const now = new Date();
   const filtered = matches.map((match) => {
-    if (match.isFinished) {
-      return match;
+    const totalPredictions = match.predictions.length;
+    const matchStarted = new Date(match.matchDate) <= now;
+    if (match.isFinished || matchStarted) {
+      return { ...match, totalPredictions };
     }
-    // For upcoming/live matches, only show the current user's prediction
     return {
       ...match,
       predictions: match.predictions.filter((p) => p.participant === currentUserName),
+      totalPredictions,
     };
   });
 
