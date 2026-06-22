@@ -27,6 +27,7 @@ interface Match {
   stadium: string;
   isFinished: boolean;
   predictions: Prediction[];
+  totalPredictions: number;
 }
 
 interface LeaderboardEntry {
@@ -56,9 +57,9 @@ export default function WorldCupClient() {
   const fetchData = useCallback(async () => {
     try {
       const [matchRes, lbRes, meRes] = await Promise.all([
-        fetch('/api/worldcup/matches'),
-        fetch('/api/worldcup/leaderboard'),
-        fetch('/api/worldcup/me'),
+        fetch('/api/worldcup/matches', { cache: 'no-store' }),
+        fetch('/api/worldcup/leaderboard', { cache: 'no-store' }),
+        fetch('/api/worldcup/me', { cache: 'no-store' }),
       ]);
 
       if (meRes.status === 401) {
@@ -150,7 +151,7 @@ export default function WorldCupClient() {
   };
 
   const predictionCount = (match: Match) => {
-    return match.predictions.length;
+    return match.totalPredictions ?? match.predictions.length;
   };
 
   const handleLogout = async () => {
