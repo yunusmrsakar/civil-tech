@@ -1,9 +1,12 @@
 import { prisma } from '@/lib/prisma';
 import { PARTICIPANTS } from '@/lib/worldcup';
+import { recalculateAllPoints } from '@/lib/worldcup-scores';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  await recalculateAllPoints().catch(() => {});
+
   const predictions = await prisma.wCPrediction.findMany({
     where: { match: { isFinished: true } },
   });
