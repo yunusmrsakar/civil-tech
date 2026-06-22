@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { PARTICIPANTS } from '@/lib/worldcup';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const predictions = await prisma.wCPrediction.findMany({
     where: { match: { isFinished: true } },

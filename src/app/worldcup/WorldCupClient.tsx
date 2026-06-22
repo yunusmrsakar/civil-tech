@@ -57,9 +57,9 @@ export default function WorldCupClient() {
   const fetchData = useCallback(async () => {
     try {
       const [matchRes, lbRes, meRes] = await Promise.all([
-        fetch('/api/worldcup/matches'),
-        fetch('/api/worldcup/leaderboard'),
-        fetch('/api/worldcup/me'),
+        fetch('/api/worldcup/matches', { cache: 'no-store' }),
+        fetch('/api/worldcup/leaderboard', { cache: 'no-store' }),
+        fetch('/api/worldcup/me', { cache: 'no-store' }),
       ]);
 
       if (meRes.status === 401) {
