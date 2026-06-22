@@ -524,7 +524,25 @@ function MatchCard({
             </div>
           )}
 
-          <div className="text-center mt-2 text-xs text-gray-400">
+          <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+            {PARTICIPANTS.map((p) => {
+              const hasPredicted = match.predictions.some((pr) => pr.participant === p.name);
+              const participant = getParticipant(p.name);
+              return (
+                <span
+                  key={p.name}
+                  title={p.name}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                    hasPredicted ? 'text-white' : 'text-gray-300 border border-gray-200'
+                  }`}
+                  style={hasPredicted ? { backgroundColor: participant?.color } : undefined}
+                >
+                  {participant?.initial}
+                </span>
+              );
+            })}
+          </div>
+          <div className="text-center mt-1.5 text-xs text-gray-400">
             {predictionCount(match)}/8 kişi tahmin yaptı
           </div>
         </div>
