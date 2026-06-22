@@ -13,9 +13,11 @@ export async function GET() {
     orderBy: { matchDate: 'asc' },
   });
 
+  const now = new Date();
   const filtered = matches.map((match) => {
     const totalPredictions = match.predictions.length;
-    if (match.isFinished) {
+    const matchStarted = new Date(match.matchDate) <= now;
+    if (match.isFinished || matchStarted) {
       return { ...match, totalPredictions };
     }
     return {
