@@ -17,14 +17,15 @@ export function calculatePoints(
   actualHome: number,
   actualAway: number
 ): { total: number; breakdown: string[] } {
-  let total = 0;
   const breakdown: string[] = [];
 
   const exactScore = predictedHome === actualHome && predictedAway === actualAway;
   if (exactScore) {
-    total += 10;
     breakdown.push('Tam skor: +10');
+    return { total: 10, breakdown };
   }
+
+  let total = 0;
 
   const predictedOutcome = Math.sign(predictedHome - predictedAway);
   const actualOutcome = Math.sign(actualHome - actualAway);
