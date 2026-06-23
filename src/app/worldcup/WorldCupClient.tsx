@@ -51,6 +51,7 @@ export default function WorldCupClient() {
   const [predictions, setPredictions] = useState<Record<string, { home: string; away: string }>>({});
   const [submitting, setSubmitting] = useState<Record<string, boolean>>({});
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -140,6 +141,16 @@ export default function WorldCupClient() {
     }
   };
 
+  const refreshScores = async () => {
+    setRefreshing(true);
+    try {
+      await fetch('/api/worldcup/refresh', { method: 'POST' });
+      await fetchData();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const getMedalEmoji = (index: number) => {
     if (index === 0) return '🥇';
     if (index === 1) return '🥈';
@@ -203,8 +214,20 @@ export default function WorldCupClient() {
         <p className="text-xs opacity-70 mt-1">— Tahmin Oyunu</p>
       </div>
 
+      {/* Refresh Button */}
+      <div className="mx-4 mt-4">
+        <button
+          onClick={refreshScores}
+          disabled={refreshing}
+          className="w-full bg-white hover:bg-gray-50 disabled:opacity-60 text-green-700 font-semibold py-2.5 rounded-2xl shadow-sm text-sm transition-all flex items-center justify-center gap-2"
+        >
+          <span className={refreshing ? 'animate-spin' : ''}>🔄</span>
+          {refreshing ? 'Güncelleniyor...' : 'Skorları Güncelle'}
+        </button>
+      </div>
+
       {/* Leaderboard */}
-      <div className="mx-4 mt-4 bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="mx-4 mt-3 bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-100">
           <h2 className="font-bold text-green-800 flex items-center gap-2">
             <span>🏅</span> GENEL SIRALAMA

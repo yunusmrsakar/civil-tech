@@ -90,9 +90,9 @@ export async function recalculateAllPoints() {
   }
 }
 
-export async function autoFinishMatches() {
+export async function autoFinishMatches(force = false) {
   const now = new Date();
-  const cutoff = new Date(now.getTime() - 120 * 60 * 1000);
+  const cutoff = force ? now : new Date(now.getTime() - 120 * 60 * 1000);
 
   const unfinished = await prisma.wCMatch.findMany({
     where: {
