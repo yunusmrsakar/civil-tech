@@ -156,6 +156,36 @@ const MATCHES: MatchData[] = [
   { homeTeam: 'DR Kongo', awayTeam: 'Özbekistan', matchDate: '2026-06-27T23:30:00Z', groupLabel: 'Grup K', stadium: 'Mercedes-Benz Stadium, Atlanta' },
   { homeTeam: 'Cezayir', awayTeam: 'Avusturya', matchDate: '2026-06-28T02:00:00Z', groupLabel: 'Grup J', stadium: 'Arrowhead Stadium, Kansas City' },
   { homeTeam: 'Ürdün', awayTeam: 'Arjantin', matchDate: '2026-06-28T02:00:00Z', groupLabel: 'Grup J', stadium: 'AT&T Stadium, Dallas' },
+
+  // ===================== SON 32 TURU =====================
+
+  // 28 Haziran (Cumartesi)
+  { homeTeam: 'Güney Afrika', awayTeam: 'Kanada', matchDate: '2026-06-28T19:00:00Z', groupLabel: 'Son 32', stadium: 'SoFi Stadium, Los Angeles' },
+
+  // 29 Haziran (Pazar)
+  { homeTeam: 'Brezilya', awayTeam: 'Japonya', matchDate: '2026-06-29T17:00:00Z', groupLabel: 'Son 32', stadium: 'NRG Stadium, Houston' },
+  { homeTeam: 'Almanya', awayTeam: 'Paraguay', matchDate: '2026-06-29T20:30:00Z', groupLabel: 'Son 32', stadium: 'Gillette Stadium, Boston' },
+  { homeTeam: 'Hollanda', awayTeam: 'Fas', matchDate: '2026-06-30T01:00:00Z', groupLabel: 'Son 32', stadium: 'Estadio BBVA, Monterrey' },
+
+  // 30 Haziran (Pazartesi)
+  { homeTeam: 'Fildişi Sahili', awayTeam: 'Norveç', matchDate: '2026-06-30T17:00:00Z', groupLabel: 'Son 32', stadium: 'AT&T Stadium, Dallas' },
+  { homeTeam: 'Fransa', awayTeam: 'İsveç', matchDate: '2026-06-30T21:00:00Z', groupLabel: 'Son 32', stadium: 'MetLife Stadium, New Jersey' },
+  { homeTeam: 'Meksika', awayTeam: 'Ekvador', matchDate: '2026-07-01T01:00:00Z', groupLabel: 'Son 32', stadium: 'Estadio Azteca, Mexico City' },
+
+  // 1 Temmuz (Salı)
+  { homeTeam: 'İngiltere', awayTeam: 'DR Kongo', matchDate: '2026-07-01T16:00:00Z', groupLabel: 'Son 32', stadium: 'Mercedes-Benz Stadium, Atlanta' },
+  { homeTeam: 'Belçika', awayTeam: 'Senegal', matchDate: '2026-07-01T20:00:00Z', groupLabel: 'Son 32', stadium: 'Lumen Field, Seattle' },
+  { homeTeam: 'ABD', awayTeam: 'Bosna Hersek', matchDate: '2026-07-02T00:00:00Z', groupLabel: 'Son 32', stadium: "Levi's Stadium, Santa Clara" },
+
+  // 2 Temmuz (Çarşamba)
+  { homeTeam: 'İspanya', awayTeam: 'Avusturya', matchDate: '2026-07-02T19:00:00Z', groupLabel: 'Son 32', stadium: 'SoFi Stadium, Los Angeles' },
+  { homeTeam: 'Portekiz', awayTeam: 'Hırvatistan', matchDate: '2026-07-02T23:00:00Z', groupLabel: 'Son 32', stadium: 'BMO Field, Toronto' },
+  { homeTeam: 'İsviçre', awayTeam: 'Cezayir', matchDate: '2026-07-03T03:00:00Z', groupLabel: 'Son 32', stadium: 'BC Place, Vancouver' },
+
+  // 3 Temmuz (Perşembe)
+  { homeTeam: 'Avustralya', awayTeam: 'Mısır', matchDate: '2026-07-03T18:00:00Z', groupLabel: 'Son 32', stadium: 'AT&T Stadium, Dallas' },
+  { homeTeam: 'Arjantin', awayTeam: 'Cabo Verde', matchDate: '2026-07-03T22:00:00Z', groupLabel: 'Son 32', stadium: 'Hard Rock Stadium, Miami' },
+  { homeTeam: 'Kolombiya', awayTeam: 'Gana', matchDate: '2026-07-04T01:30:00Z', groupLabel: 'Son 32', stadium: 'Arrowhead Stadium, Kansas City' },
 ];
 
 async function createTables() {
@@ -240,6 +270,7 @@ export async function GET(request: Request) {
       } catch { /* skip */ }
     }
 
+    const sync = url.searchParams.get('sync');
     const matchCount = await prisma.wCMatch.count();
     if (matchCount === 0 || reset === 'matches') {
       if (matchCount > 0) {
@@ -262,15 +293,43 @@ export async function GET(request: Request) {
           },
         });
       }
+    } else if (sync === 'true') {
+      let added = 0;
+      for (const match of MATCHES) {
+        const exists = await prisma.wCMatch.findFirst({
+          where: {
+            homeTeam: match.homeTeam,
+            awayTeam: match.awayTeam,
+            matchDate: new Date(match.matchDate),
+          },
+        });
+        if (!exists) {
+          await prisma.wCMatch.create({
+            data: {
+              homeTeam: match.homeTeam,
+              awayTeam: match.awayTeam,
+              homeFlag: FLAGS[match.homeTeam] || '',
+              awayFlag: FLAGS[match.awayTeam] || '',
+              matchDate: new Date(match.matchDate),
+              groupLabel: match.groupLabel,
+              stadium: match.stadium,
+              homeScore: match.homeScore ?? null,
+              awayScore: match.awayScore ?? null,
+              isFinished: match.isFinished ?? false,
+            },
+          });
+          added++;
+        }
+      }
     }
 
     const users = await prisma.user.count({ where: { role: 'PLAYER' } });
-    const matches = await prisma.wCMatch.count();
+    const totalMatches = await prisma.wCMatch.count();
     const finished = await prisma.wCMatch.count({ where: { isFinished: true } });
 
     return Response.json({
       success: true,
-      message: `Setup tamamlandı! ${users} kullanıcı, ${matches} maç (${finished} oynanmış).`,
+      message: `Setup tamamlandı! ${users} kullanıcı, ${totalMatches} maç (${finished} oynanmış).`,
     });
   } catch (error: any) {
     return Response.json({ success: false, error: error.message, stack: error.stack }, { status: 500 });
