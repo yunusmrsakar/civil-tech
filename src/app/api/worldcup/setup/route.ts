@@ -186,6 +186,24 @@ const MATCHES: MatchData[] = [
   { homeTeam: 'Avustralya', awayTeam: 'Mısır', matchDate: '2026-07-03T18:00:00Z', groupLabel: 'Son 32', stadium: 'AT&T Stadium, Dallas' },
   { homeTeam: 'Arjantin', awayTeam: 'Cabo Verde', matchDate: '2026-07-03T22:00:00Z', groupLabel: 'Son 32', stadium: 'Hard Rock Stadium, Miami' },
   { homeTeam: 'Kolombiya', awayTeam: 'Gana', matchDate: '2026-07-04T01:30:00Z', groupLabel: 'Son 32', stadium: 'Arrowhead Stadium, Kansas City' },
+
+  // ===================== SON 16 TURU =====================
+
+  // 4 Temmuz (Cumartesi)
+  { homeTeam: 'Kanada', awayTeam: 'Fas', matchDate: '2026-07-04T17:00:00Z', groupLabel: 'Son 16', stadium: 'NRG Stadium, Houston' },
+  { homeTeam: 'Paraguay', awayTeam: 'Fransa', matchDate: '2026-07-04T21:00:00Z', groupLabel: 'Son 16', stadium: 'Lincoln Financial Field, Philadelphia' },
+
+  // 5 Temmuz (Pazar)
+  { homeTeam: 'Brezilya', awayTeam: 'Norveç', matchDate: '2026-07-05T20:00:00Z', groupLabel: 'Son 16', stadium: 'MetLife Stadium, New Jersey' },
+  { homeTeam: 'Meksika', awayTeam: 'İngiltere', matchDate: '2026-07-06T00:00:00Z', groupLabel: 'Son 16', stadium: 'Estadio Azteca, Mexico City' },
+
+  // 6 Temmuz (Pazartesi)
+  { homeTeam: 'Portekiz', awayTeam: 'İspanya', matchDate: '2026-07-06T19:00:00Z', groupLabel: 'Son 16', stadium: 'AT&T Stadium, Dallas' },
+  { homeTeam: 'ABD', awayTeam: 'Belçika', matchDate: '2026-07-07T00:00:00Z', groupLabel: 'Son 16', stadium: 'Lumen Field, Seattle' },
+
+  // 7 Temmuz (Salı)
+  { homeTeam: 'Arjantin', awayTeam: 'Mısır', matchDate: '2026-07-07T16:00:00Z', groupLabel: 'Son 16', stadium: 'Mercedes-Benz Stadium, Atlanta' },
+  { homeTeam: 'İsviçre', awayTeam: 'Kolombiya', matchDate: '2026-07-07T20:00:00Z', groupLabel: 'Son 16', stadium: 'BC Place, Vancouver' },
 ];
 
 async function createTables() {
