@@ -204,6 +204,18 @@ const MATCHES: MatchData[] = [
   // 7 Temmuz (Salı)
   { homeTeam: 'Arjantin', awayTeam: 'Mısır', matchDate: '2026-07-07T16:00:00Z', groupLabel: 'Son 16', stadium: 'Mercedes-Benz Stadium, Atlanta' },
   { homeTeam: 'İsviçre', awayTeam: 'Kolombiya', matchDate: '2026-07-07T20:00:00Z', groupLabel: 'Son 16', stadium: 'BC Place, Vancouver' },
+
+  // ===================== ÇEYREK FİNAL =====================
+
+  // 9 Temmuz (Perşembe)
+  { homeTeam: 'Fransa', awayTeam: 'Fas', matchDate: '2026-07-09T20:00:00Z', groupLabel: 'Çeyrek Final', stadium: 'Gillette Stadium, Boston' },
+
+  // 10 Temmuz (Cuma)
+  { homeTeam: 'İspanya', awayTeam: 'Belçika', matchDate: '2026-07-10T19:00:00Z', groupLabel: 'Çeyrek Final', stadium: 'SoFi Stadium, Los Angeles' },
+
+  // 11 Temmuz (Cumartesi)
+  { homeTeam: 'Norveç', awayTeam: 'İngiltere', matchDate: '2026-07-11T21:00:00Z', groupLabel: 'Çeyrek Final', stadium: 'Hard Rock Stadium, Miami' },
+  { homeTeam: 'Arjantin', awayTeam: 'İsviçre', matchDate: '2026-07-12T01:00:00Z', groupLabel: 'Çeyrek Final', stadium: 'Arrowhead Stadium, Kansas City' },
 ];
 
 async function createTables() {
